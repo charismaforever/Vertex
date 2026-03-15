@@ -484,24 +484,50 @@
 
 <script>
   let threatData = { nvd:[], cisa:[], urlhaus:[], hibp:[], ransomware:[], phishing:[], biztools:[] };
-  let loadedCount = 0;
-  const TOTAL_SOURCES = 6;
-  const REFRESH_MS = 5 * 60 * 1000;
+  const REFRESH_MS  = 60 * 60 * 1000;  // 60 minutes — keeps well within Netlify free tier
+  const BIZTOOLS_TTL = 2 * 60 * 60 * 1000; // biztools cached 2 hours in sessionStorage
+  let refreshTimer = null;
 
-  // ── Fetch all ──
+  // ── Pause refresh when tab is hidden, resume when visible ──
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      clearInterval(refreshTimer);
+    } else {
+      // Only re-fetch if last update was more than 60 mins ago
+      const last = parseInt(sessionStorage.getItem('vertex_last_fetch') || '0');
+      if (Date.now() - last > REFRESH_MS) fetchAll();
+      refreshTimer = setInterval(fetchAll, REFRESH_MS);
+    }
+  });
+
+  // ── Fetch all sources (staggered to avoid burst) ──
   async function fetchAll() {
     document.getElementById('last-updated').textContent = 'Refreshing…';
-    loadedCount = 0;
-    await Promise.allSettled([
-      fetchSource('nvd'), fetchSource('cisa'), fetchSource('urlhaus'),
-      fetchSource('hibp'), fetchSource('ransomware'), fetchSource('phishing'),
-    ]);
+    sessionStorage.setItem('vertex_last_fetch', Date.now().toString());
+
+    // Stagger main sources 300ms apart to avoid simultaneous requests
+    const sources = ['nvd','cisa','urlhaus','hibp','ransomware','phishing'];
+    for (let i = 0; i < sources.length; i++) {
+      setTimeout(() => fetchSource(sources[i]), i * 300);
+    }
+
+    // Wait for all to finish then update summary
+    await new Promise(r => setTimeout(r, sources.length * 300 + 3000));
     document.getElementById('last-updated').textContent =
       'Updated ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     updateStats();
     updateThreatScore();
-    // Biztools runs separately as it takes longer (12 NVD queries)
-    fetchBizTools();
+
+    // Biztools: use sessionStorage cache, only re-fetch if stale
+    const biztoolsCache = sessionStorage.getItem('vertex_biztools');
+    const biztoolsTime  = parseInt(sessionStorage.getItem('vertex_biztools_time') || '0');
+    if (biztoolsCache && Date.now() - biztoolsTime < BIZTOOLS_TTL) {
+      threatData.biztools = JSON.parse(biztoolsCache);
+      renderBizTools();
+      document.getElementById('biztools-meta').textContent += ' (cached)';
+    } else {
+      fetchBizTools();
+    }
   }
 
   async function fetchSource(source) {
@@ -841,6 +867,8 @@ Only reference what is listed above. No invented details.`;
       if (!res.ok) throw new Error(`${res.status}`);
       const json = await res.json();
       threatData.biztools = json.data || [];
+      sessionStorage.setItem('vertex_biztools', JSON.stringify(threatData.biztools));
+      sessionStorage.setItem('vertex_biztools_time', Date.now().toString());
       renderBizTools();
     } catch(err) {
       document.getElementById('biztools-meta').textContent = `Failed: ${err.message}`;
@@ -935,8 +963,9 @@ Only reference what is listed above. No invented details.`;
     activeDrawerIdx = null;
   }
 
+  // ── Start ──
   fetchAll();
-  setInterval(fetchAll, REFRESH_MS);
+  refreshTimer = setInterval(fetchAll, REFRESH_MS);
 </script>
 </body>
 </html>
