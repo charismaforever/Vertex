@@ -506,13 +506,17 @@
   async function fetchSource(source) {
     try {
       const res = await fetch(`/api/threat?source=${source}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(`${res.status} — ${errBody.error || 'server error'}`);
+      }
       const json = await res.json();
       threatData[source] = json.data || [];
       render(source);
     } catch (err) {
-      document.getElementById(`${source === 'nvd' ? 'nvd' : source === 'cisa' ? 'cisa' : source === 'urlhaus' ? 'urlhaus' : 'hibp'}-list`).innerHTML =
-        `<div class="error-msg">⚠ Failed to load: ${err.message}</div>`;
+      const listId = { nvd: 'nvd-list', cisa: 'cisa-list', urlhaus: 'urlhaus-list', hibp: 'hibp-list' }[source];
+      if (listId) document.getElementById(listId).innerHTML =
+        `<div class="error-msg">⚠ ${source.toUpperCase()} failed: ${err.message}</div>`;
     }
   }
 
@@ -663,14 +667,18 @@ ${urlSummary || 'No data available'}`;
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'deepseek-r1-distill-llama-70b',
+          model: 'llama-3.3-70b-versatile',
           messages: [{ role: 'user', content: prompt }],
-          system: 'You are a concise cybersecurity analyst. Write clear, plain-English threat briefings for small business owners. Be specific and actionable.'
+          system: 'You are a concise cybersecurity analyst. Write clear, plain-English threat briefings for small business owners. Be specific and actionable. Never use <think> tags.'
         })
       });
 
-      if (!res.ok) throw new Error(`API error ${res.status}`);
-      const { reply } = await res.json();
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(`${res.status} — ${errBody.error || 'unknown error'}`);
+      }
+      const data = await res.json();
+      const reply = (data.reply || '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
 
       // Typewriter effect
       let i = 0;
