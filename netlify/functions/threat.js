@@ -62,25 +62,24 @@ exports.handler = async function (event) {
         return { statusCode: 200, headers, body: JSON.stringify({ source: "cisa", data: recent }) };
       }
 
-      // ── URLhaus: Live malware URL feed (abuse.ch, free) ──
+      // ── Abuse.ch Feodo Tracker: Live botnet C2 IPs (free, no key needed) ──
       case "urlhaus": {
-        const res = await fetch("https://urlhaus-api.abuse.ch/v1/urls/recent/limit/20/", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: "",
+        const res = await fetch("https://feodotracker.abuse.ch/downloads/ipblocklist.json", {
+          headers: { "User-Agent": "VertexThreatDashboard/1.0" },
         });
-        if (!res.ok) throw new Error(`URLhaus error: ${res.status}`);
+        if (!res.ok) throw new Error(`Feodo Tracker error: ${res.status}`);
         const data = await res.json();
-        const urls = (data.urls || []).slice(0, 15).map((u) => ({
-          id: u.id,
-          url: u.url,
-          host: u.host,
-          status: u.url_status,
-          threat: u.threat,
-          tags: u.tags || [],
-          dateAdded: u.date_added,
-        }));
-        return { statusCode: 200, headers, body: JSON.stringify({ source: "urlhaus", data: urls }) };
+        const entries = (data.blocklist || [])
+          .slice(0, 20)
+          .map((e) => ({
+            id: e.ip_address,
+            host: e.ip_address,
+            status: e.status === "online" ? "online" : "offline",
+            threat: `${e.malware} botnet C2`,
+            tags: [e.malware, e.country].filter(Boolean),
+            dateAdded: e.first_seen,
+          }));
+        return { statusCode: 200, headers, body: JSON.stringify({ source: "urlhaus", data: entries }) };
       }
 
       // ── HIBP: Recent public breaches (no key needed for breach list) ──
