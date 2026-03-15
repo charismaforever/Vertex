@@ -1,7 +1,8 @@
 {
-  "outputDirectory": "public",
-  "functions": {
-    "api/chat.js": { "maxDuration": 30 },
-    "api/threat.js": { "maxDuration": 60 }
-  }
+  "version": 2,
+  "routes": [
+    { "src": "/api/chat", "dest": "/api/chat.js" },
+    { "src": "/api/threat", "dest": "/api/threat.js" },
+    { "src": "/(.*)", "dest": "/public/$1" }
+  ]
 }
