@@ -8,553 +8,599 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:        #0e0f12;
-    --surface:   #141519;
-    --surface2:  #1c1d23;
-    --border:    rgba(255,255,255,0.07);
-    --text:      #e2e4ec;
-    --muted:     #6b7080;
-    --faint:     #3a3d4a;
-    --red:       #f04f4f;
-    --red-dim:   rgba(240,79,79,0.12);
-    --orange:    #f08c3a;
-    --orange-dim:rgba(240,140,58,0.12);
-    --yellow:    #e8c94a;
-    --yellow-dim:rgba(232,201,74,0.12);
-    --green:     #4fcf8c;
-    --green-dim: rgba(79,207,140,0.12);
-    --blue:      #4a9ff0;
-    --blue-dim:  rgba(74,159,240,0.12);
-    --accent:    #c4410c;
-    --serif:     'Playfair Display', Georgia, serif;
-    --mono:      'IBM Plex Mono', monospace;
-    --radius:    10px;
+    --bg:#0e0f12; --surface:#141519; --surface2:#1c1d23;
+    --border:rgba(255,255,255,0.07); --text:#e2e4ec; --muted:#6b7080; --faint:#3a3d4a;
+    --red:#f04f4f; --red-dim:rgba(240,79,79,0.12);
+    --orange:#f08c3a; --orange-dim:rgba(240,140,58,0.12);
+    --yellow:#e8c94a; --yellow-dim:rgba(232,201,74,0.12);
+    --green:#4fcf8c; --green-dim:rgba(79,207,140,0.12);
+    --blue:#4a9ff0; --blue-dim:rgba(74,159,240,0.12);
+    --purple:#a78bfa; --purple-dim:rgba(167,139,250,0.12);
+    --serif:'Playfair Display',Georgia,serif;
+    --mono:'IBM Plex Mono',monospace;
+    --radius:10px;
   }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;}
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+    background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);}
+  .app{min-height:100dvh;display:flex;flex-direction:column;}
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  /* Header */
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:58px;
+    display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:100;}
+  .header-left{display:flex;align-items:center;gap:20px;}
+  .wordmark{font-family:var(--serif);font-size:20px;font-weight:600;letter-spacing:-0.02em;color:var(--text);}
+  .wordmark em{color:#f04f4f;font-style:italic;}
+  .page-title{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);
+    border-left:1px solid var(--border);padding-left:20px;}
+  .header-right{display:flex;align-items:center;gap:12px;}
+  .live-dot{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--green);}
+  .live-dot::before{content:'';width:7px;height:7px;background:var(--green);border-radius:50%;animation:livepulse 2s infinite;}
+  @keyframes livepulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(79,207,140,0.4);}50%{opacity:0.7;box-shadow:0 0 0 5px rgba(79,207,140,0);}}
+  .last-updated{font-size:10px;color:var(--muted);letter-spacing:0.04em;}
+  .nav-link{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);
+    text-decoration:none;border:1px solid var(--border);border-radius:4px;padding:5px 12px;transition:all 0.15s;}
+  .nav-link:hover{color:var(--text);border-color:var(--faint);}
 
-  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; }
+  /* Main */
+  main{flex:1;padding:28px;max-width:1440px;margin:0 auto;width:100%;}
 
-  /* scanline effect */
-  body::before {
-    content: '';
-    position: fixed; inset: 0; pointer-events: none; z-index: 9999;
-    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+  /* Threat Score Banner */
+  .score-banner{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:20px 28px;margin-bottom:24px;
+    display:flex;align-items:center;justify-content:space-between;gap:24px;
   }
-
-  /* ── Layout ── */
-  .app { min-height: 100dvh; display: flex; flex-direction: column; }
-
-  /* ── Header ── */
-  header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 0 28px;
-    height: 58px;
-    display: flex; align-items: center; justify-content: space-between;
-    flex-shrink: 0;
-    position: sticky; top: 0; z-index: 100;
+  .score-left{display:flex;align-items:center;gap:20px;}
+  .score-circle{
+    width:72px;height:72px;border-radius:50%;
+    display:grid;place-items:center;flex-shrink:0;
+    font-family:var(--serif);font-size:28px;font-weight:600;
+    border:3px solid;transition:all 0.5s;
   }
+  .score-circle.low{border-color:var(--green);color:var(--green);background:var(--green-dim);}
+  .score-circle.medium{border-color:var(--yellow);color:var(--yellow);background:var(--yellow-dim);}
+  .score-circle.high{border-color:var(--orange);color:var(--orange);background:var(--orange-dim);}
+  .score-circle.critical{border-color:var(--red);color:var(--red);background:var(--red-dim);}
+  .score-info{}
+  .score-label{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+  .score-title{font-family:var(--serif);font-size:20px;color:var(--text);margin-bottom:3px;}
+  .score-desc{font-size:11px;color:var(--muted);line-height:1.5;max-width:500px;}
+  .score-bars{display:flex;gap:12px;flex-wrap:wrap;}
+  .score-bar-item{text-align:center;}
+  .score-bar-label{font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+  .score-bar-track{width:60px;height:6px;background:var(--faint);border-radius:3px;overflow:hidden;}
+  .score-bar-fill{height:100%;border-radius:3px;transition:width 1s;}
+  .score-bar-val{font-size:10px;color:var(--text);margin-top:3px;}
 
-  .header-left { display: flex; align-items: center; gap: 20px; }
-
-  .wordmark {
-    font-family: var(--serif);
-    font-size: 20px; font-weight: 600;
-    letter-spacing: -0.02em;
-    color: var(--text);
+  /* Domain lookup */
+  .lookup-bar{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:18px 24px;margin-bottom:24px;
   }
-  .wordmark em { color: #f04f4f; font-style: italic; }
-
-  .page-title {
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
-    border-left: 1px solid var(--border);
-    padding-left: 20px;
+  .lookup-title{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;
+    display:flex;align-items:center;gap:8px;}
+  .lookup-row{display:flex;gap:10px;}
+  .lookup-input{
+    flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;
+    padding:10px 14px;font-family:var(--mono);font-size:13px;color:var(--text);outline:none;
+    transition:border-color 0.15s;
   }
-
-  .header-right { display: flex; align-items: center; gap: 12px; }
-
-  .live-dot {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--green);
+  .lookup-input:focus{border-color:var(--blue);}
+  .lookup-input::placeholder{color:var(--muted);}
+  .lookup-btn{
+    background:var(--blue);color:#fff;border:none;border-radius:7px;padding:10px 20px;
+    font-family:var(--mono);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;
+    cursor:pointer;transition:background 0.15s,transform 0.1s;white-space:nowrap;
   }
-  .live-dot::before {
-    content: '';
-    width: 7px; height: 7px;
-    background: var(--green);
-    border-radius: 50%;
-    animation: livepulse 2s infinite;
+  .lookup-btn:hover{background:#3a8fe0;}
+  .lookup-btn:active{transform:scale(0.97);}
+  .lookup-btn:disabled{background:var(--faint);cursor:not-allowed;}
+  .lookup-results{margin-top:14px;}
+  .lookup-clean{display:flex;align-items:center;gap:8px;color:var(--green);font-size:12px;padding:10px 0;}
+  .lookup-hit{
+    background:var(--red-dim);border:1px solid rgba(240,79,79,0.2);border-radius:7px;
+    padding:12px 16px;margin-bottom:8px;
   }
-  @keyframes livepulse {
-    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(79,207,140,0.4); }
-    50% { opacity: 0.7; box-shadow: 0 0 0 5px rgba(79,207,140,0); }
-  }
+  .lookup-hit.high{background:var(--orange-dim);border-color:rgba(240,140,58,0.2);}
+  .lookup-hit-source{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--red);margin-bottom:8px;font-weight:500;}
+  .lookup-hit.high .lookup-hit-source{color:var(--orange);}
+  .lookup-match{font-size:12px;color:var(--text);margin-bottom:3px;}
+  .lookup-match-detail{font-size:11px;color:var(--muted);}
 
-  .last-updated {
-    font-size: 10px; color: var(--muted);
-    letter-spacing: 0.04em;
-  }
+  /* Summary stats */
+  .summary-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px 18px;position:relative;overflow:hidden;}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+  .stat-card.red::before{background:var(--red);}
+  .stat-card.orange::before{background:var(--orange);}
+  .stat-card.yellow::before{background:var(--yellow);}
+  .stat-card.blue::before{background:var(--blue);}
+  .stat-card.purple::before{background:var(--purple);}
+  .stat-card.green::before{background:var(--green);}
+  .stat-label{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+  .stat-value{font-size:26px;font-weight:500;line-height:1;font-family:var(--serif);}
+  .stat-card.red .stat-value{color:var(--red);}
+  .stat-card.orange .stat-value{color:var(--orange);}
+  .stat-card.yellow .stat-value{color:var(--yellow);}
+  .stat-card.blue .stat-value{color:var(--blue);}
+  .stat-card.purple .stat-value{color:var(--purple);}
+  .stat-card.green .stat-value{color:var(--green);}
+  .stat-sub{font-size:10px;color:var(--muted);margin-top:3px;}
 
-  .nav-link {
-    font-family: var(--mono);
-    font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
-    color: var(--muted);
-    text-decoration: none;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 5px 12px;
-    transition: all 0.15s;
-  }
-  .nav-link:hover { color: var(--text); border-color: var(--faint); }
+  /* Grid */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:18px;}
 
-  /* ── Main ── */
-  main { flex: 1; padding: 28px; max-width: 1400px; margin: 0 auto; width: 100%; }
+  /* Panel */
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);display:flex;flex-direction:column;}
+  .panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);flex-shrink:0;}
+  .panel-title{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;font-weight:500;color:var(--text);}
+  .panel-icon{width:20px;height:20px;border-radius:4px;display:grid;place-items:center;font-size:11px;}
+  .panel-icon.red{background:var(--red-dim);color:var(--red);}
+  .panel-icon.orange{background:var(--orange-dim);color:var(--orange);}
+  .panel-icon.blue{background:var(--blue-dim);color:var(--blue);}
+  .panel-icon.green{background:var(--green-dim);color:var(--green);}
+  .panel-icon.purple{background:var(--purple-dim);color:var(--purple);}
+  .panel-icon.yellow{background:var(--yellow-dim);color:var(--yellow);}
+  .panel-meta{font-size:10px;color:var(--muted);}
+  .panel-body{flex:1;overflow-y:auto;max-height:380px;}
+  .panel-body::-webkit-scrollbar{width:3px;}
+  .panel-body::-webkit-scrollbar-thumb{background:var(--faint);}
 
-  /* ── Summary bar ── */
-  .summary-bar {
+  /* Items */
+  .item{padding:12px 18px;border-bottom:1px solid var(--border);transition:background 0.15s;cursor:default;}
+  .item:last-child{border-bottom:none;}
+  .item:hover{background:var(--surface2);}
+  .item-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:8px;}
+  .item-id{font-size:11px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;}
+  .badge{font-size:9px;letter-spacing:0.08em;text-transform:uppercase;padding:2px 6px;border-radius:3px;font-weight:500;white-space:nowrap;flex-shrink:0;}
+  .badge-critical{background:var(--red-dim);color:var(--red);}
+  .badge-high{background:var(--orange-dim);color:var(--orange);}
+  .badge-medium{background:var(--yellow-dim);color:var(--yellow);}
+  .badge-online{background:var(--red-dim);color:var(--red);}
+  .badge-offline{background:var(--green-dim);color:var(--green);}
+  .badge-breach{background:var(--blue-dim);color:var(--blue);}
+  .badge-ransomware{background:var(--purple-dim);color:var(--purple);}
+  .badge-phish{background:var(--orange-dim);color:var(--orange);}
+  .item-desc{font-size:11.5px;color:var(--muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .item-footer{display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap;}
+  .item-meta{font-size:10px;color:var(--faint);display:flex;align-items:center;gap:3px;}
+  .tag{font-size:9px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:1px 5px;color:var(--muted);}
+  .score-chip{font-size:11px;font-weight:500;padding:2px 7px;border-radius:4px;}
+  .score-critical{background:var(--red-dim);color:var(--red);}
+  .score-high{background:var(--orange-dim);color:var(--orange);}
+
+  /* AI Report */
+  .report-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:18px;}
+  .report-body{padding:20px;line-height:1.75;font-size:13px;color:var(--text);min-height:80px;}
+  .report-body p{margin-bottom:10px;}
+  .report-body p:last-child{margin-bottom:0;}
+  .report-body strong{color:var(--yellow);font-weight:500;}
+  .report-body em{color:var(--orange);font-style:normal;}
+  .report-body ul{padding-left:20px;margin:8px 0;}
+  .report-body li{margin-bottom:5px;color:var(--muted);}
+  .report-body h3{font-family:var(--serif);font-size:15px;color:var(--text);margin:14px 0 6px;}
+  .report-placeholder{color:var(--muted);font-size:13px;font-style:italic;padding:20px;}
+  .generate-btn{background:var(--red);color:#fff;border:none;border-radius:6px;padding:7px 16px;
+    font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;
+    cursor:pointer;transition:background 0.15s,transform 0.1s;}
+  .generate-btn:hover{background:#d43f3f;}
+  .generate-btn:active{transform:scale(0.97);}
+  .generate-btn:disabled{background:var(--faint);cursor:not-allowed;}
+
+  /* Skeleton */
+  .skeleton{background:linear-gradient(90deg,var(--surface2) 25%,var(--faint) 50%,var(--surface2) 75%);
+    background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px;height:13px;margin-bottom:7px;}
+  @keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+  .skeleton-row{padding:12px 18px;border-bottom:1px solid var(--border);}
+  .skeleton-row .skeleton:last-child{width:60%;margin-bottom:0;}
+
+  .error-msg{padding:16px 18px;color:var(--red);font-size:12px;display:flex;align-items:center;gap:8px;}
+  .cursor{opacity:0.4;animation:blink 1s infinite;}
+  @keyframes blink{0%,100%{opacity:0.4;}50%{opacity:0;}}
+
+  /* Business Tools Grid */
+  .tools-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
-    margin-bottom: 28px;
+    gap: 12px;
+    margin-bottom: 18px;
   }
-
-  .stat-card {
+  .tool-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 18px 20px;
-    display: flex; flex-direction: column; gap: 6px;
-    position: relative; overflow: hidden;
-    transition: border-color 0.2s;
-  }
-  .stat-card::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0;
-    height: 2px;
-  }
-  .stat-card.red::before { background: var(--red); }
-  .stat-card.orange::before { background: var(--orange); }
-  .stat-card.yellow::before { background: var(--yellow); }
-  .stat-card.blue::before { background: var(--blue); }
-
-  .stat-label {
-    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--muted);
-  }
-  .stat-value {
-    font-size: 32px; font-weight: 500; line-height: 1;
-    font-family: var(--serif);
-  }
-  .stat-card.red .stat-value   { color: var(--red); }
-  .stat-card.orange .stat-value { color: var(--orange); }
-  .stat-card.yellow .stat-value { color: var(--yellow); }
-  .stat-card.blue .stat-value  { color: var(--blue); }
-  .stat-sub { font-size: 11px; color: var(--muted); }
-
-  /* ── Grid ── */
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 20px;
-  }
-
-  .grid-full { grid-column: 1 / -1; }
-
-  /* ── Panel ── */
-  .panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    display: flex; flex-direction: column;
-  }
-
-  .panel-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-
-  .panel-title {
-    display: flex; align-items: center; gap: 10px;
-    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
-    font-weight: 500; color: var(--text);
-  }
-
-  .panel-icon {
-    width: 22px; height: 22px;
-    border-radius: 5px;
-    display: grid; place-items: center;
-    font-size: 12px;
-  }
-  .panel-icon.red    { background: var(--red-dim);    color: var(--red); }
-  .panel-icon.orange { background: var(--orange-dim); color: var(--orange); }
-  .panel-icon.blue   { background: var(--blue-dim);   color: var(--blue); }
-  .panel-icon.green  { background: var(--green-dim);  color: var(--green); }
-
-  .panel-meta { font-size: 10px; color: var(--muted); }
-
-  .panel-body { flex: 1; overflow-y: auto; max-height: 420px; }
-  .panel-body::-webkit-scrollbar { width: 3px; }
-  .panel-body::-webkit-scrollbar-thumb { background: var(--faint); }
-
-  /* ── Cards in panels ── */
-  .item {
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
-    transition: background 0.15s;
-    cursor: default;
-  }
-  .item:last-child { border-bottom: none; }
-  .item:hover { background: var(--surface2); }
-
-  .item-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 6px; gap: 10px;
-  }
-
-  .item-id {
-    font-size: 11px; font-weight: 500;
-    color: var(--text);
-    white-space: nowrap;
-  }
-
-  .badge {
-    font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase;
-    padding: 2px 7px; border-radius: 3px;
-    font-weight: 500; white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .badge-critical { background: var(--red-dim);    color: var(--red); }
-  .badge-high     { background: var(--orange-dim); color: var(--orange); }
-  .badge-medium   { background: var(--yellow-dim); color: var(--yellow); }
-  .badge-low      { background: var(--green-dim);  color: var(--green); }
-  .badge-online   { background: var(--red-dim);    color: var(--red); }
-  .badge-offline  { background: var(--green-dim);  color: var(--green); }
-  .badge-breach   { background: var(--blue-dim);   color: var(--blue); }
-
-  .item-desc {
-    font-size: 12px; color: var(--muted); line-height: 1.5;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    padding: 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    position: relative;
     overflow: hidden;
   }
+  .tool-card::before {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .tool-card.clear::before   { background: var(--green); }
+  .tool-card.low::before     { background: var(--yellow); }
+  .tool-card.medium::before  { background: var(--yellow); }
+  .tool-card.high::before    { background: var(--orange); }
+  .tool-card.critical::before{ background: var(--red); }
+  .tool-card.unknown::before { background: var(--faint); }
+  .tool-card:hover { border-color: var(--faint); background: var(--surface2); }
+  .tool-card.active { border-color: var(--blue); }
 
-  .item-footer {
-    display: flex; align-items: center; gap: 12px;
-    margin-top: 7px; flex-wrap: wrap;
+  .tool-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .tool-icon-name { display: flex; align-items: center; gap: 8px; }
+  .tool-icon { font-size: 18px; line-height: 1; }
+  .tool-name { font-size: 12px; font-weight: 500; color: var(--text); }
+  .tool-category { font-size: 9px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 1px; }
+
+  .tool-status-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .tool-status-dot.clear   { background: var(--green); }
+  .tool-status-dot.low     { background: var(--yellow); }
+  .tool-status-dot.medium  { background: var(--yellow); }
+  .tool-status-dot.high    { background: var(--orange); }
+  .tool-status-dot.critical{ background: var(--red); box-shadow: 0 0 6px var(--red); }
+  .tool-status-dot.unknown { background: var(--faint); }
+  .tool-status-dot.loading { background: var(--faint); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:0.3} 50%{opacity:1} }
+
+  .tool-cve-count {
+    font-family: var(--serif);
+    font-size: 22px;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+  .tool-card.clear .tool-cve-count   { color: var(--green); }
+  .tool-card.low .tool-cve-count     { color: var(--yellow); }
+  .tool-card.medium .tool-cve-count  { color: var(--yellow); }
+  .tool-card.high .tool-cve-count    { color: var(--orange); }
+  .tool-card.critical .tool-cve-count{ color: var(--red); }
+  .tool-card.unknown .tool-cve-count { color: var(--faint); }
+
+  .tool-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+  .tool-status-label { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .tool-card.clear .tool-status-label   { color: var(--green); }
+  .tool-card.low .tool-status-label     { color: var(--yellow); }
+  .tool-card.medium .tool-status-label  { color: var(--yellow); }
+  .tool-card.high .tool-status-label    { color: var(--orange); }
+  .tool-card.critical .tool-status-label{ color: var(--red); }
+  .tool-card.unknown .tool-status-label { color: var(--faint); }
+  .tool-exploited-badge {
+    font-size: 9px; background: var(--red-dim); color: var(--red);
+    border-radius: 3px; padding: 1px 5px; letter-spacing: 0.04em;
   }
 
-  .item-meta {
-    font-size: 10px; color: var(--faint);
-    display: flex; align-items: center; gap: 4px;
-  }
-
-  .tag {
-    font-size: 9px; background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 3px; padding: 1px 6px;
-    color: var(--muted);
-  }
-
-  .score-chip {
-    font-size: 11px; font-weight: 500;
-    padding: 2px 8px; border-radius: 4px;
-  }
-  .score-critical { background: var(--red-dim); color: var(--red); }
-  .score-high     { background: var(--orange-dim); color: var(--orange); }
-
-  /* ── AI Report panel ── */
-  .report-panel {
+  /* Tool detail drawer */
+  .tool-drawer {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    margin-bottom: 20px;
+    margin-bottom: 18px;
+    display: none;
   }
-
-  .report-body {
-    padding: 20px;
-    line-height: 1.75;
-    font-size: 13px;
-    color: var(--text);
-    min-height: 80px;
+  .tool-drawer.open { display: block; }
+  .tool-drawer-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
   }
-
-  .report-body p { margin-bottom: 10px; }
-  .report-body p:last-child { margin-bottom: 0; }
-  .report-body strong { color: var(--yellow); font-weight: 500; }
-  .report-body em { color: var(--orange); font-style: normal; font-weight: 400; }
-  .report-body ul { padding-left: 20px; margin: 8px 0; }
-  .report-body li { margin-bottom: 5px; color: var(--muted); }
-  .report-body h3 { font-family: var(--serif); font-size: 15px; color: var(--text); margin: 14px 0 6px; }
-
-  .report-placeholder {
-    color: var(--muted); font-size: 13px; font-style: italic;
-    padding: 20px;
+  .tool-drawer-title { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; color: var(--text); }
+  .drawer-close {
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    font-size: 16px; line-height: 1; padding: 2px 6px;
+    border-radius: 4px; transition: color 0.15s;
   }
+  .drawer-close:hover { color: var(--text); }
+  .tool-drawer-body { padding: 0; max-height: 320px; overflow-y: auto; }
+  .tool-drawer-body::-webkit-scrollbar { width: 3px; }
+  .tool-drawer-body::-webkit-scrollbar-thumb { background: var(--faint); }
+  .tool-drawer-empty { padding: 20px; color: var(--green); font-size: 12px; display: flex; align-items: center; gap: 8px; }
 
-  .generate-btn {
-    background: var(--red);
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    padding: 8px 18px;
-    font-family: var(--mono);
-    font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-  }
-  .generate-btn:hover { background: #d43f3f; }
-  .generate-btn:active { transform: scale(0.97); }
-  .generate-btn:disabled { background: var(--faint); cursor: not-allowed; }
-
-  /* ── Loading skeleton ── */
-  .skeleton {
-    background: linear-gradient(90deg, var(--surface2) 25%, var(--faint) 50%, var(--surface2) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: 4px;
-    height: 14px; margin-bottom: 8px;
-  }
-  @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-
-  .skeleton-row { padding: 14px 20px; border-bottom: 1px solid var(--border); }
-  .skeleton-row .skeleton:last-child { width: 60%; margin-bottom: 0; }
-
-  /* ── Error state ── */
-  .error-msg {
-    padding: 20px;
-    color: var(--red);
-    font-size: 12px;
-    display: flex; align-items: center; gap: 8px;
-  }
-
-  /* ── Typing cursor ── */
-  .cursor { opacity: 0.4; animation: blink 1s infinite; }
-  @keyframes blink { 0%, 100% { opacity: 0.4; } 50% { opacity: 0; } }
-
-  /* ── Responsive ── */
-  @media (max-width: 900px) {
-    .grid { grid-template-columns: 1fr; }
-    .summary-bar { grid-template-columns: repeat(2, 1fr); }
-    main { padding: 16px; }
-    header { padding: 0 16px; }
-    .page-title { display: none; }
-  }
-  @media (max-width: 500px) {
-    .summary-bar { grid-template-columns: 1fr 1fr; }
-    .stat-value { font-size: 24px; }
-  }
-</style>
+  @media(max-width:1100px) { .tools-grid { grid-template-columns: repeat(3,1fr); } }
+  @media(max-width:800px)  { .tools-grid { grid-template-columns: repeat(2,1fr); } }</style>
 </head>
 <body>
 <div class="app">
+<header>
+  <div class="header-left">
+    <div class="wordmark">Vert<em>ex</em></div>
+    <span class="page-title">Threat Intelligence</span>
+  </div>
+  <div class="header-right">
+    <span class="live-dot">Live</span>
+    <span class="last-updated" id="last-updated">Fetching…</span>
+    <a href="index.html" class="nav-link">← Chat</a>
+  </div>
+</header>
 
-  <!-- Header -->
-  <header>
-    <div class="header-left">
-      <div class="wordmark">Vert<em>ex</em></div>
-      <span class="page-title">Threat Intelligence</span>
-    </div>
-    <div class="header-right">
-      <span class="live-dot">Live</span>
-      <span class="last-updated" id="last-updated">Fetching…</span>
-      <a href="index.html" class="nav-link">← Chat</a>
-    </div>
-  </header>
+<main>
 
-  <main>
-
-    <!-- Summary stats -->
-    <div class="summary-bar">
-      <div class="stat-card red">
-        <div class="stat-label">Critical CVEs (7d)</div>
-        <div class="stat-value" id="stat-cves">—</div>
-        <div class="stat-sub">New critical vulnerabilities</div>
-      </div>
-      <div class="stat-card orange">
-        <div class="stat-label">Actively Exploited</div>
-        <div class="stat-value" id="stat-cisa">—</div>
-        <div class="stat-sub">CISA KEV additions</div>
-      </div>
-      <div class="stat-card yellow">
-        <div class="stat-label">Live Malware URLs</div>
-        <div class="stat-value" id="stat-urls">—</div>
-        <div class="stat-sub">URLhaus active threats</div>
-      </div>
-      <div class="stat-card blue">
-        <div class="stat-label">Recent Breaches</div>
-        <div class="stat-value" id="stat-breaches">—</div>
-        <div class="stat-sub">HIBP reported</div>
+  <!-- Threat Score Banner -->
+  <div class="score-banner">
+    <div class="score-left">
+      <div class="score-circle" id="score-circle">—</div>
+      <div class="score-info">
+        <div class="score-label">Current Threat Level</div>
+        <div class="score-title" id="score-title">Calculating…</div>
+        <div class="score-desc" id="score-desc">Analysing live feeds across 6 intelligence sources.</div>
       </div>
     </div>
+    <div class="score-bars" id="score-bars">
+      <div class="score-bar-item">
+        <div class="score-bar-label">CVEs</div>
+        <div class="score-bar-track"><div class="score-bar-fill" id="bar-cve" style="width:0%;background:var(--red)"></div></div>
+        <div class="score-bar-val" id="barv-cve">—</div>
+      </div>
+      <div class="score-bar-item">
+        <div class="score-bar-label">Exploited</div>
+        <div class="score-bar-track"><div class="score-bar-fill" id="bar-cisa" style="width:0%;background:var(--orange)"></div></div>
+        <div class="score-bar-val" id="barv-cisa">—</div>
+      </div>
+      <div class="score-bar-item">
+        <div class="score-bar-label">Ransomware</div>
+        <div class="score-bar-track"><div class="score-bar-fill" id="bar-rw" style="width:0%;background:var(--purple)"></div></div>
+        <div class="score-bar-val" id="barv-rw">—</div>
+      </div>
+      <div class="score-bar-item">
+        <div class="score-bar-label">Breaches</div>
+        <div class="score-bar-track"><div class="score-bar-fill" id="bar-hibp" style="width:0%;background:var(--blue)"></div></div>
+        <div class="score-bar-val" id="barv-hibp">—</div>
+      </div>
+      <div class="score-bar-item">
+        <div class="score-bar-label">Phishing</div>
+        <div class="score-bar-track"><div class="score-bar-fill" id="bar-phish" style="width:0%;background:var(--yellow)"></div></div>
+        <div class="score-bar-val" id="barv-phish">—</div>
+      </div>
+    </div>
+  </div>
 
-    <!-- AI Report -->
-    <div class="report-panel">
+  <!-- Domain/IP Lookup -->
+  <div class="lookup-bar">
+    <div class="lookup-title">🔍 Domain / IP / Company Lookup — check anything against all live threat feeds</div>
+    <div class="lookup-row">
+      <input class="lookup-input" id="lookup-input" type="text"
+        placeholder="e.g. microsoft.com  •  192.168.1.1  •  LockBit  •  CVE-2024-1234"
+        onkeydown="if(event.key==='Enter') runLookup()"/>
+      <button class="lookup-btn" id="lookup-btn" onclick="runLookup()">Check Now</button>
+    </div>
+    <div class="lookup-results" id="lookup-results"></div>
+  </div>
+
+  <!-- Summary stats -->
+  <div class="summary-bar">
+    <div class="stat-card red"><div class="stat-label">Critical CVEs (7d)</div><div class="stat-value" id="stat-cves">—</div><div class="stat-sub">NIST NVD</div></div>
+    <div class="stat-card orange"><div class="stat-label">Actively Exploited</div><div class="stat-value" id="stat-cisa">—</div><div class="stat-sub">CISA KEV</div></div>
+    <div class="stat-card purple"><div class="stat-label">Ransomware Victims</div><div class="stat-value" id="stat-rw">—</div><div class="stat-sub">Ransomware.live</div></div>
+    <div class="stat-card blue"><div class="stat-label">Recent Breaches</div><div class="stat-value" id="stat-breaches">—</div><div class="stat-sub">Have I Been Pwned</div></div>
+    <div class="stat-card yellow"><div class="stat-label">Phishing URLs</div><div class="stat-value" id="stat-phish">—</div><div class="stat-sub">OpenPhish</div></div>
+    <div class="stat-card green"><div class="stat-label">Live C2 Servers</div><div class="stat-value" id="stat-urls">—</div><div class="stat-sub">C2IntelFeeds</div></div>
+  </div>
+
+  <!-- AI Report -->
+  <div class="report-panel">
+    <div class="panel-header">
+      <div class="panel-title"><div class="panel-icon red">⚡</div>AI Threat Briefing for Small Business</div>
+      <button class="generate-btn" id="report-btn" onclick="generateReport()">Generate Report</button>
+    </div>
+    <div id="report-output">
+      <div class="report-placeholder">Click "Generate Report" to get an AI-written threat briefing based on today's live intelligence — summarised and prioritised for small business owners.</div>
+    </div>
+  </div>
+
+  <!-- Row 1: CVEs + CISA -->
+  <div class="grid">
+    <div class="panel">
       <div class="panel-header">
-        <div class="panel-title">
-          <div class="panel-icon red">⚡</div>
-          AI Threat Briefing for Small Business
-        </div>
-        <button class="generate-btn" id="report-btn" onclick="generateReport()">
-          Generate Report
-        </button>
+        <div class="panel-title"><div class="panel-icon red">⚠</div>Critical CVEs — Last 7 Days</div>
+        <span class="panel-meta" id="nvd-meta">NVD · NIST</span>
       </div>
-      <div id="report-output">
-        <div class="report-placeholder">
-          Click "Generate Report" to get an AI-written threat briefing based on today's live intelligence data — summarised and prioritised for small business owners.
+      <div class="panel-body" id="nvd-list"><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><div class="panel-icon orange">🎯</div>Actively Exploited</div>
+        <span class="panel-meta" id="cisa-meta">CISA KEV</span>
+      </div>
+      <div class="panel-body" id="cisa-list"><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div></div>
+    </div>
+  </div>
+
+  <!-- Row 2: Ransomware + Phishing -->
+  <div class="grid">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><div class="panel-icon purple">💀</div>Ransomware Victims</div>
+        <span class="panel-meta" id="rw-meta">Ransomware.live</span>
+      </div>
+      <div class="panel-body" id="rw-list"><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><div class="panel-icon yellow">🎣</div>Live Phishing URLs</div>
+        <span class="panel-meta" id="phish-meta">OpenPhish Community</span>
+      </div>
+      <div class="panel-body" id="phish-list"><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div></div>
+    </div>
+  </div>
+
+  <!-- Row 3: Breaches + Botnet C2s -->
+  <div class="grid">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><div class="panel-icon blue">💧</div>Recent Data Breaches</div>
+        <span class="panel-meta" id="hibp-meta">Have I Been Pwned</span>
+      </div>
+      <div class="panel-body" id="hibp-list"><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><div class="panel-icon green">🦠</div>Live C2 Servers</div>
+        <span class="panel-meta" id="urlhaus-meta">C2IntelFeeds · GitHub</span>
+      </div>
+      <div class="panel-body" id="urlhaus-list"><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div><div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div></div>
+    </div>
+  </div>
+
+  <!-- Business Tools CVE Monitor -->
+  <div class="panel" style="margin-bottom:18px;">
+    <div class="panel-header">
+      <div class="panel-title"><div class="panel-icon blue">🛠</div>Business Tools — CVE Monitor</div>
+      <span class="panel-meta" id="biztools-meta">Checking 12 tools against NVD + CISA KEV…</span>
+    </div>
+    <div style="padding:18px;">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:16px;line-height:1.6;">
+        Live CVE monitoring for the most widely used small business software. Click any tool to see specific vulnerabilities. 
+        <span style="color:var(--green)">●</span> No recent CVEs &nbsp;
+        <span style="color:var(--yellow)">●</span> Low/Medium &nbsp;
+        <span style="color:var(--orange)">●</span> High &nbsp;
+        <span style="color:var(--red)">●</span> Critical
+      </div>
+      <div class="tools-grid" id="tools-grid">
+        <!-- Skeleton cards -->
+        <div class="tool-card unknown" style="opacity:0.4"><div class="tool-card-top"><div class="tool-icon-name"><div class="tool-icon">⏳</div><div><div class="tool-name">Loading…</div></div></div><div class="tool-status-dot loading"></div></div><div class="tool-cve-count">—</div></div>
+        <div class="tool-card unknown" style="opacity:0.4"><div class="tool-card-top"><div class="tool-icon-name"><div class="tool-icon">⏳</div><div><div class="tool-name">Loading…</div></div></div><div class="tool-status-dot loading"></div></div><div class="tool-cve-count">—</div></div>
+        <div class="tool-card unknown" style="opacity:0.4"><div class="tool-card-top"><div class="tool-icon-name"><div class="tool-icon">⏳</div><div><div class="tool-name">Loading…</div></div></div><div class="tool-status-dot loading"></div></div><div class="tool-cve-count">—</div></div>
+        <div class="tool-card unknown" style="opacity:0.4"><div class="tool-card-top"><div class="tool-icon-name"><div class="tool-icon">⏳</div><div><div class="tool-name">Loading…</div></div></div><div class="tool-status-dot loading"></div></div><div class="tool-cve-count">—</div></div>
+      </div>
+      <!-- Drill-down drawer -->
+      <div class="tool-drawer" id="tool-drawer">
+        <div class="tool-drawer-header">
+          <div class="tool-drawer-title" id="drawer-title">CVEs</div>
+          <button class="drawer-close" onclick="closeDrawer()">✕</button>
         </div>
+        <div class="tool-drawer-body" id="drawer-body"></div>
       </div>
     </div>
+  </div>
 
-    <!-- Top row: CVEs + CISA -->
-    <div class="grid">
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">
-            <div class="panel-icon red">⚠</div>
-            Critical CVEs — Last 7 Days
-          </div>
-          <span class="panel-meta" id="nvd-meta">NVD · NIST</span>
-        </div>
-        <div class="panel-body" id="nvd-list">
-          <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div>
-          <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div>
-          <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">
-            <div class="panel-icon orange">🎯</div>
-            Actively Exploited
-          </div>
-          <span class="panel-meta" id="cisa-meta">CISA KEV</span>
-        </div>
-        <div class="panel-body" id="cisa-list">
-          <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div>
-          <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div>
-          <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Bottom row: URLhaus + HIBP -->
-    <div class="grid">
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">
-            <div class="panel-icon red">🦠</div>
-            Live Malware URLs
-          </div>
-          <span class="panel-meta" id="urlhaus-meta">URLhaus · abuse.ch</span>
-        </div>
-        <div class="panel-body" id="urlhaus-list">
-          <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div>
-          <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div>
-          <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">
-            <div class="panel-icon blue">💧</div>
-            Recent Data Breaches
-          </div>
-          <span class="panel-meta" id="hibp-meta">Have I Been Pwned</span>
-        </div>
-        <div class="panel-body" id="hibp-list">
-          <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div>
-          <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div>
-          <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div>
-        </div>
-      </div>
-    </div>
-
-  </main>
+</main>
 </div>
 
 <script>
-  // ── State ──
-  let threatData = { nvd: [], cisa: [], urlhaus: [], hibp: [] };
-  const REFRESH_MS = 5 * 60 * 1000; // 5 minutes
+  let threatData = { nvd:[], cisa:[], urlhaus:[], hibp:[], ransomware:[], phishing:[], biztools:[] };
+  let loadedCount = 0;
+  const TOTAL_SOURCES = 6;
+  const REFRESH_MS = 5 * 60 * 1000;
 
-  // ── Fetch all sources ──
+  // ── Fetch all ──
   async function fetchAll() {
     document.getElementById('last-updated').textContent = 'Refreshing…';
+    loadedCount = 0;
     await Promise.allSettled([
-      fetchSource('nvd'),
-      fetchSource('cisa'),
-      fetchSource('urlhaus'),
-      fetchSource('hibp'),
+      fetchSource('nvd'), fetchSource('cisa'), fetchSource('urlhaus'),
+      fetchSource('hibp'), fetchSource('ransomware'), fetchSource('phishing'),
     ]);
-    const now = new Date();
     document.getElementById('last-updated').textContent =
-      'Updated ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      'Updated ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     updateStats();
+    updateThreatScore();
+    // Biztools runs separately as it takes longer (12 NVD queries)
+    fetchBizTools();
   }
 
   async function fetchSource(source) {
     try {
       const res = await fetch(`/api/threat?source=${source}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const e = await res.json().catch(()=>({}));
+        throw new Error(`${res.status} — ${e.error||'server error'}`);
+      }
       const json = await res.json();
       threatData[source] = json.data || [];
       render(source);
-    } catch (err) {
-      document.getElementById(`${source === 'nvd' ? 'nvd' : source === 'cisa' ? 'cisa' : source === 'urlhaus' ? 'urlhaus' : 'hibp'}-list`).innerHTML =
-        `<div class="error-msg">⚠ Failed to load: ${err.message}</div>`;
+    } catch(err) {
+      const ids = {nvd:'nvd-list',cisa:'cisa-list',urlhaus:'urlhaus-list',hibp:'hibp-list',ransomware:'rw-list',phishing:'phish-list'};
+      const el = document.getElementById(ids[source]);
+      if(el) el.innerHTML = `<div class="error-msg">⚠ ${source} failed: ${err.message}</div>`;
     }
   }
 
   function updateStats() {
-    document.getElementById('stat-cves').textContent     = threatData.nvd.length || '—';
-    document.getElementById('stat-cisa').textContent     = threatData.cisa.length || '—';
-    document.getElementById('stat-urls').textContent     = threatData.urlhaus.filter(u => u.status === 'online').length || '—';
+    document.getElementById('stat-cves').textContent = threatData.nvd.length || '—';
+    document.getElementById('stat-cisa').textContent = threatData.cisa.length || '—';
+    document.getElementById('stat-urls').textContent = threatData.urlhaus.filter(u=>u.status==='online').length || '—';
     document.getElementById('stat-breaches').textContent = threatData.hibp.length || '—';
+    document.getElementById('stat-rw').textContent = threatData.ransomware.length || '—';
+    document.getElementById('stat-phish').textContent = threatData.phishing.length || '—';
+  }
+
+  function updateThreatScore() {
+    const cveScore   = Math.min(100, threatData.nvd.length * 6);
+    const cisaScore  = Math.min(100, threatData.cisa.length * 7);
+    const rwScore    = Math.min(100, threatData.ransomware.length * 5);
+    const hibpScore  = Math.min(100, threatData.hibp.length * 5);
+    const phishScore = Math.min(100, threatData.phishing.length * 3);
+    const total = Math.round((cveScore + cisaScore + rwScore + hibpScore + phishScore) / 5);
+
+    const circle = document.getElementById('score-circle');
+    const title  = document.getElementById('score-title');
+    const desc   = document.getElementById('score-desc');
+    circle.textContent = total;
+    circle.className = 'score-circle ' + (total >= 75 ? 'critical' : total >= 50 ? 'high' : total >= 25 ? 'medium' : 'low');
+
+    const levels = [
+      [75, 'CRITICAL', 'Significant active threats detected across multiple intelligence feeds. Immediate action recommended.'],
+      [50, 'HIGH',     'Elevated threat activity. Review actively exploited CVEs and ransomware victims in your sector.'],
+      [25, 'MODERATE', 'Normal threat levels with some notable activity. Stay current on patches.'],
+      [0,  'LOW',      'Threat activity is below average. Maintain standard security practices.'],
+    ];
+    for (const [t, label, d] of levels) {
+      if (total >= t) { title.textContent = label; desc.textContent = d; break; }
+    }
+
+    // Bars
+    document.getElementById('bar-cve').style.width   = cveScore + '%';
+    document.getElementById('bar-cisa').style.width  = cisaScore + '%';
+    document.getElementById('bar-rw').style.width    = rwScore + '%';
+    document.getElementById('bar-hibp').style.width  = hibpScore + '%';
+    document.getElementById('bar-phish').style.width = phishScore + '%';
+    document.getElementById('barv-cve').textContent   = threatData.nvd.length;
+    document.getElementById('barv-cisa').textContent  = threatData.cisa.length;
+    document.getElementById('barv-rw').textContent    = threatData.ransomware.length;
+    document.getElementById('barv-hibp').textContent  = threatData.hibp.length;
+    document.getElementById('barv-phish').textContent = threatData.phishing.length;
   }
 
   // ── Renderers ──
-  function render(source) {
-    const fns = { nvd: renderNVD, cisa: renderCISA, urlhaus: renderURLhaus, hibp: renderHIBP };
-    fns[source]?.();
+  function render(s) {
+    const fns = {nvd:renderNVD,cisa:renderCISA,urlhaus:renderFeodo,hibp:renderHIBP,ransomware:renderRansomware,phishing:renderPhishing};
+    fns[s]?.();
   }
 
-  function fmtDate(str) {
-    if (!str) return '—';
-    return new Date(str).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  function fmtDate(s) {
+    if(!s) return '—';
+    return new Date(s).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
   }
 
-  function severityBadge(score) {
-    if (!score) return '';
-    if (score >= 9)  return `<span class="score-chip score-critical">${score} CRITICAL</span>`;
-    if (score >= 7)  return `<span class="score-chip score-high">${score} HIGH</span>`;
+  function esc(s) {
+    if(!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function scoreChip(score) {
+    if(!score) return '';
+    if(score>=9) return `<span class="score-chip score-critical">${score}</span>`;
+    if(score>=7) return `<span class="score-chip score-high">${score}</span>`;
     return `<span class="score-chip">${score}</span>`;
   }
 
   function renderNVD() {
     const el = document.getElementById('nvd-list');
-    document.getElementById('nvd-meta').textContent = `NVD · NIST · ${threatData.nvd.length} results`;
-    if (!threatData.nvd.length) { el.innerHTML = '<div class="error-msg">No critical CVEs found in this period.</div>'; return; }
-    el.innerHTML = threatData.nvd.map(c => `
+    document.getElementById('nvd-meta').textContent = `NVD · ${threatData.nvd.length} critical`;
+    if(!threatData.nvd.length){el.innerHTML='<div class="error-msg">No critical CVEs in period.</div>';return;}
+    el.innerHTML = threatData.nvd.map(c=>`
       <div class="item">
-        <div class="item-header">
-          <span class="item-id">${c.id}</span>
-          ${severityBadge(c.score)}
-        </div>
+        <div class="item-header"><span class="item-id">${c.id}</span>${scoreChip(c.score)}</div>
         <div class="item-desc">${esc(c.description)}</div>
         <div class="item-footer">
           <span class="item-meta">📅 ${fmtDate(c.published)}</span>
-          ${c.references[0] ? `<a href="${c.references[0]}" target="_blank" style="color:var(--muted);font-size:10px;text-decoration:none;" rel="noopener">Details ↗</a>` : ''}
+          ${c.references[0]?`<a href="${c.references[0]}" target="_blank" rel="noopener" style="color:var(--muted);font-size:10px;text-decoration:none;">Details ↗</a>`:''}
         </div>
       </div>`).join('');
   }
@@ -562,13 +608,10 @@
   function renderCISA() {
     const el = document.getElementById('cisa-list');
     document.getElementById('cisa-meta').textContent = `CISA KEV · ${threatData.cisa.length} recent`;
-    if (!threatData.cisa.length) { el.innerHTML = '<div class="error-msg">No data.</div>'; return; }
-    el.innerHTML = threatData.cisa.map(c => `
+    if(!threatData.cisa.length){el.innerHTML='<div class="error-msg">No data.</div>';return;}
+    el.innerHTML = threatData.cisa.map(c=>`
       <div class="item">
-        <div class="item-header">
-          <span class="item-id">${c.id}</span>
-          <span class="badge badge-critical">Exploited</span>
-        </div>
+        <div class="item-header"><span class="item-id">${c.id}</span><span class="badge badge-critical">Exploited</span></div>
         <div class="item-desc"><strong style="color:var(--orange)">${esc(c.vendor)} ${esc(c.product)}</strong> — ${esc(c.name)}</div>
         <div class="item-footer">
           <span class="item-meta">📅 Added ${fmtDate(c.dateAdded)}</span>
@@ -577,150 +620,321 @@
       </div>`).join('');
   }
 
-  function renderURLhaus() {
-    const el = document.getElementById('urlhaus-list');
-    const online = threatData.urlhaus.filter(u => u.status === 'online').length;
-    document.getElementById('urlhaus-meta').textContent = `URLhaus · ${online} active`;
-    if (!threatData.urlhaus.length) { el.innerHTML = '<div class="error-msg">No data.</div>'; return; }
-    el.innerHTML = threatData.urlhaus.map(u => `
+  function renderRansomware() {
+    const el = document.getElementById('rw-list');
+    document.getElementById('rw-meta').textContent = `Ransomware.live · ${threatData.ransomware.length} victims`;
+    if(!threatData.ransomware.length){el.innerHTML='<div class="error-msg">No data.</div>';return;}
+    el.innerHTML = threatData.ransomware.map(v=>`
       <div class="item">
         <div class="item-header">
-          <span class="item-id" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.host)}</span>
-          <span class="badge ${u.status === 'online' ? 'badge-online' : 'badge-offline'}">${u.status}</span>
+          <span class="item-id">${esc(v.victim)}</span>
+          <span class="badge badge-ransomware">${esc(v.group)}</span>
         </div>
-        <div class="item-desc">${esc(u.threat || 'Unknown threat')} · ${esc(u.url?.slice(0, 60))}…</div>
+        <div class="item-desc">${esc(v.sector)} · ${esc(v.country)}</div>
         <div class="item-footer">
-          <span class="item-meta">📅 ${fmtDate(u.dateAdded)}</span>
-          ${(u.tags || []).map(t => `<span class="tag">${esc(t)}</span>`).join('')}
+          <span class="item-meta">📅 ${fmtDate(v.published)}</span>
+          ${v.website?`<span class="item-meta">🌐 ${esc(v.website)}</span>`:''}
         </div>
+      </div>`).join('');
+  }
+
+  function renderPhishing() {
+    const el = document.getElementById('phish-list');
+    document.getElementById('phish-meta').textContent = `OpenPhish · ${threatData.phishing.length} active`;
+    if(!threatData.phishing.length){el.innerHTML='<div class="error-msg">No data.</div>';return;}
+    el.innerHTML = threatData.phishing.map(u=>`
+      <div class="item">
+        <div class="item-header">
+          <span class="item-id">${esc(u.host)}</span>
+          <span class="badge badge-phish">Phishing</span>
+        </div>
+        <div class="item-desc" style="font-size:10px;color:var(--faint)">${esc(u.url?.slice(0,80))}…</div>
+        <div class="item-footer"><span class="item-meta">⚠ Do not visit this URL</span></div>
       </div>`).join('');
   }
 
   function renderHIBP() {
     const el = document.getElementById('hibp-list');
     document.getElementById('hibp-meta').textContent = `HIBP · ${threatData.hibp.length} breaches`;
-    if (!threatData.hibp.length) { el.innerHTML = '<div class="error-msg">No data.</div>'; return; }
-    el.innerHTML = threatData.hibp.map(b => `
+    if(!threatData.hibp.length){el.innerHTML='<div class="error-msg">No data.</div>';return;}
+    el.innerHTML = threatData.hibp.map(b=>`
       <div class="item">
         <div class="item-header">
           <span class="item-id">${esc(b.title)}</span>
-          <span class="badge badge-breach">${Number(b.pwnCount).toLocaleString()} accounts</span>
+          <span class="badge badge-breach">${Number(b.pwnCount).toLocaleString()} accts</span>
         </div>
-        <div class="item-desc">${esc(b.description || b.domain)}</div>
+        <div class="item-desc">${esc(b.description||b.domain)}</div>
         <div class="item-footer">
-          <span class="item-meta">📅 Breach: ${fmtDate(b.breachDate)}</span>
-          ${(b.dataClasses || []).slice(0,3).map(d => `<span class="tag">${esc(d)}</span>`).join('')}
+          <span class="item-meta">📅 ${fmtDate(b.breachDate)}</span>
+          ${(b.dataClasses||[]).slice(0,3).map(d=>`<span class="tag">${esc(d)}</span>`).join('')}
         </div>
       </div>`).join('');
   }
 
-  // ── AI Report generation ──
+  function renderFeodo() {
+    const el = document.getElementById('urlhaus-list');
+    const online = threatData.urlhaus.filter(u=>u.status==='online').length;
+    document.getElementById('urlhaus-meta').textContent = `Feodo Tracker · ${online} active`;
+    if(!threatData.urlhaus.length){el.innerHTML='<div class="error-msg">No data.</div>';return;}
+    el.innerHTML = threatData.urlhaus.map(u=>`
+      <div class="item">
+        <div class="item-header">
+          <span class="item-id">${esc(u.host)}</span>
+          <span class="badge ${u.status==='online'?'badge-online':'badge-offline'}">${u.status}</span>
+        </div>
+        <div class="item-desc">${esc(u.threat)}</div>
+        <div class="item-footer">
+          <span class="item-meta">📅 ${fmtDate(u.dateAdded)}</span>
+          ${(u.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}
+        </div>
+      </div>`).join('');
+  }
+
+  // ── Domain/IP Lookup ──
+  async function runLookup() {
+    const input = document.getElementById('lookup-input');
+    const btn   = document.getElementById('lookup-btn');
+    const out   = document.getElementById('lookup-results');
+    const query = input.value.trim();
+    if(!query) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Checking…';
+    out.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px 0;">Scanning all threat feeds…</div>';
+
+    try {
+      const res = await fetch('/api/threat?source=lookup', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({query})
+      });
+      const data = await res.json();
+
+      if(!data.found || !data.results?.length) {
+        out.innerHTML = `<div class="lookup-clean">✅ No matches found for "<strong>${esc(query)}</strong>" across all feeds. Not a known threat.</div>`;
+      } else {
+        out.innerHTML = data.results.map(r=>`
+          <div class="lookup-hit ${r.severity==='high'?'high':''}">
+            <div class="lookup-hit-source">⚠ Found in ${esc(r.source)}</div>
+            ${r.matches.map(m=>`
+              <div class="lookup-match">${esc(m.label)}</div>
+              <div class="lookup-match-detail">${esc(m.detail)} ${m.date?'· '+fmtDate(m.date):''}</div>
+            `).join('<hr style="border:none;border-top:1px solid rgba(255,255,255,0.05);margin:6px 0">')}
+          </div>`).join('');
+      }
+    } catch(err) {
+      out.innerHTML = `<div class="error-msg">⚠ Lookup failed: ${err.message}</div>`;
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Check Now';
+  }
+
+  document.getElementById('lookup-input').addEventListener('keydown', e => {
+    if(e.key==='Enter') runLookup();
+  });
+
+  // ── AI Report ──
   async function generateReport() {
     const btn = document.getElementById('report-btn');
     const out = document.getElementById('report-output');
-    btn.disabled = true;
-    btn.textContent = 'Generating…';
+    btn.disabled = true; btn.textContent = 'Generating…';
+    const today = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
 
-    // Summarise data for the prompt
-    const nvdSummary = threatData.nvd.slice(0, 5).map(c =>
-      `${c.id} (Score: ${c.score}): ${c.description?.slice(0, 120)}`).join('\n');
-    const cisaSummary = threatData.cisa.slice(0, 5).map(c =>
-      `${c.id} - ${c.vendor} ${c.product}: ${c.name}`).join('\n');
-    const hibpSummary = threatData.hibp.slice(0, 5).map(b =>
-      `${b.title} (${b.domain}) - ${Number(b.pwnCount).toLocaleString()} accounts, data: ${b.dataClasses?.join(', ')}`).join('\n');
-    const urlSummary = threatData.urlhaus.filter(u => u.status === 'online').slice(0, 5).map(u =>
-      `${u.host}: ${u.threat}`).join('\n');
+    const nvdS = threatData.nvd.slice(0,6).map(c=>`- ${c.id} (CVSS ${c.score??'N/A'}): ${(c.description||'').slice(0,150)}`).join('\n') || 'No data.';
+    const cisaS = threatData.cisa.slice(0,6).map(c=>`- ${c.id} | ${c.vendor} ${c.product} | ${c.name} | Action: ${(c.action||'').slice(0,100)}`).join('\n') || 'No data.';
+    const hibpS = threatData.hibp.slice(0,5).map(b=>`- ${b.title} (${b.domain}): ${Number(b.pwnCount).toLocaleString()} accounts. Data: ${b.dataClasses?.join(', ')}`).join('\n') || 'No data.';
+    const rwS = threatData.ransomware.slice(0,6).map(v=>`- ${v.victim} | Gang: ${v.group} | Sector: ${v.sector} | Country: ${v.country}`).join('\n') || 'No data.';
+    const phishS = threatData.phishing.slice(0,5).map(u=>`- ${u.host}`).join('\n') || 'No data.';
+    const c2S = threatData.urlhaus.filter(u=>u.status==='online').slice(0,5).map(u=>`- ${u.host}: ${u.threat}`).join('\n') || 'No data.';
 
-    const prompt = `You are a cybersecurity analyst writing a brief, plain-English threat briefing for a small business owner with no technical background.
+    const prompt = `Today is ${today}. You are a cybersecurity analyst writing a threat briefing for a small business owner.
 
-Based on the following live threat intelligence data from today, write a clear, actionable report in 3 sections:
+CRITICAL: Only reference items that appear EXACTLY in the LIVE DATA below. Never invent CVE IDs, company names, version numbers or product names not listed here. Never use prior training knowledge about threats — only the data below.
 
-1. **What's happening right now** (2-3 sentences summarising the current threat landscape)
-2. **What this means for your business** (3-4 bullet points of specific, practical risks for small businesses)
-3. **What to do today** (3-4 concrete, simple actions the business owner should take immediately)
+Write in exactly 3 sections using plain English:
 
-Keep it under 300 words. Be specific, not generic. Use plain English.
+### What is happening right now
+2-3 sentences naming specific CVEs, ransomware gangs, and breached companies from the data.
 
-LIVE DATA:
+### What this means for your business
+3-4 bullet points of specific risks based only on vendors/products/sectors in the data.
 
-Critical CVEs (last 7 days):
-${nvdSummary || 'No data available'}
+### What to do today
+3-4 concrete actions directly addressing the specific threats in today's data.
 
-Actively exploited vulnerabilities (CISA):
-${cisaSummary || 'No data available'}
+LIVE DATA (${today}):
 
-Recent data breaches (HIBP):
-${hibpSummary || 'No data available'}
+Critical CVEs — NIST NVD:
+${nvdS}
 
-Active malware URLs (URLhaus):
-${urlSummary || 'No data available'}`;
+Actively Exploited — CISA KEV:
+${cisaS}
+
+Data Breaches — Have I Been Pwned:
+${hibpS}
+
+Ransomware Victims — Ransomware.live:
+${rwS}
+
+Active Phishing Domains — OpenPhish:
+${phishS}
+
+Live Botnet C2s — Feodo Tracker:
+${c2S}
+
+Only reference what is listed above. No invented details.`;
 
     out.innerHTML = '<div class="report-body"><span class="cursor">▌</span></div>';
-    const reportBody = out.querySelector('.report-body');
+    const body = out.querySelector('.report-body');
 
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch('/api/chat',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
-          model: 'deepseek-r1-distill-llama-70b',
-          messages: [{ role: 'user', content: prompt }],
-          system: 'You are a concise cybersecurity analyst. Write clear, plain-English threat briefings for small business owners. Be specific and actionable.'
+          model:'llama-3.3-70b-versatile',
+          messages:[{role:'user',content:prompt}],
+          system:'You are a concise cybersecurity analyst. Write plain-English threat briefings for small business owners. Only use data provided. Never hallucinate. No <think> tags.'
         })
       });
+      if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(`${res.status} — ${e.error||'unknown'}`);}
+      const {reply} = await res.json();
+      const clean = (reply||'').replace(/<think>[\s\S]*?<\/think>/g,'').trim();
 
-      if (!res.ok) throw new Error(`API error ${res.status}`);
-      const { reply } = await res.json();
-
-      // Typewriter effect
-      let i = 0;
-      const chars = reply.split('');
-      const delay = Math.max(4, Math.min(15, Math.floor(800 / chars.length)));
-
-      function tick() {
-        if (i >= chars.length) {
-          reportBody.innerHTML = renderMd(reply);
-          btn.disabled = false;
-          btn.textContent = 'Regenerate';
-          return;
-        }
-        reportBody.innerHTML = renderMd(reply.slice(0, ++i)) + '<span class="cursor">▌</span>';
-        setTimeout(tick, delay);
+      let i=0;
+      const chars=clean.split('');
+      const delay=Math.max(4,Math.min(15,Math.floor(800/chars.length)));
+      function tick(){
+        if(i>=chars.length){body.innerHTML=renderMd(clean);btn.disabled=false;btn.textContent='Regenerate';return;}
+        body.innerHTML=renderMd(clean.slice(0,++i))+'<span class="cursor">▌</span>';
+        setTimeout(tick,delay);
       }
       tick();
-
-    } catch (err) {
-      out.innerHTML = `<div class="error-msg">⚠ Failed to generate report: ${err.message}</div>`;
-      btn.disabled = false;
-      btn.textContent = 'Retry';
+    } catch(err) {
+      out.innerHTML=`<div class="error-msg">⚠ ${err.message}</div>`;
+      btn.disabled=false; btn.textContent='Retry';
     }
   }
 
-  // ── Markdown ──
   function renderMd(text) {
-    text = text.replace(/```[\s\S]*?```/g, '');
-    text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    text = text.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
-    text = text.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-    text = text.replace(/^## (.+)$/gm, '<h3>$1</h3>');
-    text = text.replace(/^# (.+)$/gm, '<h3>$1</h3>');
-    text = text.replace(/^\s*[-*] (.+)$/gm, '<li>$1</li>');
-    text = text.replace(/(<li>[\s\S]+?<\/li>)(\n(?!<li>)|$)/g, '<ul>$1</ul>$2');
-    const blocks = text.split(/\n{2,}/);
-    return blocks.map(b => {
-      b = b.trim();
-      if (!b) return '';
-      if (/^<(h[123]|ul|li)/.test(b)) return b;
-      return `<p>${b.replace(/\n/g, '<br>')}</p>`;
+    text = text.replace(/```[\s\S]*?```/g,'');
+    text = text.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+    text = text.replace(/\*([^*\n]+)\*/g,'<em>$1</em>');
+    text = text.replace(/^### (.+)$/gm,'<h3>$1</h3>');
+    text = text.replace(/^## (.+)$/gm,'<h3>$1</h3>');
+    text = text.replace(/^# (.+)$/gm,'<h3>$1</h3>');
+    text = text.replace(/^\s*[-*] (.+)$/gm,'<li>$1</li>');
+    text = text.replace(/(<li>[\s\S]+?<\/li>)(\n(?!<li>)|$)/g,'<ul>$1</ul>$2');
+    return text.split(/\n{2,}/).map(b=>{
+      b=b.trim(); if(!b) return '';
+      if(/^<(h[123]|ul|li)/.test(b)) return b;
+      return `<p>${b.replace(/\n/g,'<br>')}</p>`;
     }).join('');
   }
 
-  function esc(s) {
-    if (!s) return '';
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // ── Business Tools ──
+  async function fetchBizTools() {
+    document.getElementById('biztools-meta').textContent = 'Scanning 12 tools against NVD + CISA KEV…';
+    try {
+      const res = await fetch('/api/threat?source=biztools');
+      if (!res.ok) throw new Error(`${res.status}`);
+      const json = await res.json();
+      threatData.biztools = json.data || [];
+      renderBizTools();
+    } catch(err) {
+      document.getElementById('biztools-meta').textContent = `Failed: ${err.message}`;
+      document.getElementById('tools-grid').innerHTML = `<div class="error-msg" style="grid-column:1/-1">⚠ Business tools scan failed: ${err.message}</div>`;
+    }
   }
 
-  // ── Auto-refresh every 5 minutes ──
+  function renderBizTools() {
+    const tools = threatData.biztools;
+    const grid = document.getElementById('tools-grid');
+    const withCves = tools.filter(t => t.cves?.length > 0).length;
+    const critical = tools.filter(t => t.status === 'critical').length;
+    document.getElementById('biztools-meta').textContent =
+      `${tools.length} tools monitored · ${withCves} with recent CVEs · ${critical} critical`;
+
+    grid.innerHTML = tools.map((tool, idx) => {
+      const exploited = tool.cves?.some(c => c.activelyExploited);
+      const status = tool.status || 'unknown';
+      const count = tool.cves?.length || 0;
+      return `
+        <div class="tool-card ${status}" onclick="openDrawer(${idx})" id="tool-card-${idx}">
+          <div class="tool-card-top">
+            <div class="tool-icon-name">
+              <div class="tool-icon">${tool.icon}</div>
+              <div>
+                <div class="tool-name">${esc(tool.name)}</div>
+                <div class="tool-category">${esc(tool.category)}</div>
+              </div>
+            </div>
+            <div class="tool-status-dot ${status}"></div>
+          </div>
+          <div class="tool-cve-count">${count}</div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">CVE${count!==1?'s':''} (90d)</div>
+          <div class="tool-card-footer">
+            <span class="tool-status-label">${status === 'clear' ? 'All clear' : status.toUpperCase()}</span>
+            ${exploited ? '<span class="tool-exploited-badge">⚠ Exploited</span>' : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  let activeDrawerIdx = null;
+
+  function openDrawer(idx) {
+    const tool = threatData.biztools[idx];
+    if (!tool) return;
+
+    // Toggle
+    if (activeDrawerIdx === idx) { closeDrawer(); return; }
+    activeDrawerIdx = idx;
+
+    // Remove active from all cards
+    document.querySelectorAll('.tool-card').forEach(c => c.classList.remove('active'));
+    document.getElementById(`tool-card-${idx}`)?.classList.add('active');
+
+    const drawer = document.getElementById('tool-drawer');
+    const title  = document.getElementById('drawer-title');
+    const body   = document.getElementById('drawer-body');
+
+    title.innerHTML = `${tool.icon} ${esc(tool.name)} — CVEs (last 90 days) &nbsp;<a href="${tool.url}" target="_blank" rel="noopener" style="font-size:10px;color:var(--blue);text-decoration:none;">Visit site ↗</a>`;
+
+    if (!tool.cves || tool.cves.length === 0) {
+      body.innerHTML = `<div class="tool-drawer-empty">✅ No CVEs found for ${esc(tool.name)} in the last 90 days.</div>`;
+    } else {
+      body.innerHTML = tool.cves.map(c => `
+        <div class="item">
+          <div class="item-header">
+            <span class="item-id">${c.id}</span>
+            <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+              ${c.activelyExploited ? '<span class="badge badge-critical">⚠ Actively Exploited</span>' : ''}
+              ${c.score >= 9 ? `<span class="score-chip score-critical">${c.score}</span>` :
+                c.score >= 7 ? `<span class="score-chip score-high">${c.score}</span>` :
+                c.score ? `<span class="score-chip">${c.score}</span>` : ''}
+            </div>
+          </div>
+          <div class="item-desc">${esc(c.description)}</div>
+          <div class="item-footer">
+            <span class="item-meta">📅 ${fmtDate(c.published)}</span>
+            <span class="item-meta badge badge-${c.severity?.toLowerCase() || 'medium'}">${c.severity || 'UNKNOWN'}</span>
+            ${c.reference ? `<a href="${c.reference}" target="_blank" rel="noopener" style="color:var(--muted);font-size:10px;text-decoration:none;">Details ↗</a>` : ''}
+          </div>
+        </div>`).join('');
+    }
+
+    drawer.classList.add('open');
+    drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function closeDrawer() {
+    document.getElementById('tool-drawer').classList.remove('open');
+    document.querySelectorAll('.tool-card').forEach(c => c.classList.remove('active'));
+    activeDrawerIdx = null;
+  }
+
   fetchAll();
   setInterval(fetchAll, REFRESH_MS);
 </script>
