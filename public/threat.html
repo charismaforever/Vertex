@@ -385,9 +385,9 @@
         <div class="stat-sub">CISA KEV additions</div>
       </div>
       <div class="stat-card yellow">
-        <div class="stat-label">Live Malware URLs</div>
+        <div class="stat-label">Live Botnet C2s</div>
         <div class="stat-value" id="stat-urls">—</div>
-        <div class="stat-sub">URLhaus active threats</div>
+        <div class="stat-sub">Feodo Tracker active C2s</div>
       </div>
       <div class="stat-card blue">
         <div class="stat-label">Recent Breaches</div>
@@ -453,9 +453,9 @@
         <div class="panel-header">
           <div class="panel-title">
             <div class="panel-icon red">🦠</div>
-            Live Malware URLs
+            Live Botnet C2 Servers
           </div>
-          <span class="panel-meta" id="urlhaus-meta">URLhaus · abuse.ch</span>
+          <span class="panel-meta" id="urlhaus-meta">Feodo Tracker · abuse.ch</span>
         </div>
         <div class="panel-body" id="urlhaus-list">
           <div class="skeleton-row"><div class="skeleton"></div><div class="skeleton"></div></div>
@@ -584,7 +584,7 @@
   function renderURLhaus() {
     const el = document.getElementById('urlhaus-list');
     const online = threatData.urlhaus.filter(u => u.status === 'online').length;
-    document.getElementById('urlhaus-meta').textContent = `URLhaus · ${online} active`;
+    document.getElementById('urlhaus-meta').textContent = `Feodo Tracker · ${online} active C2s`;
     if (!threatData.urlhaus.length) { el.innerHTML = '<div class="error-msg">No data.</div>'; return; }
     el.innerHTML = threatData.urlhaus.map(u => `
       <div class="item">
@@ -625,39 +625,73 @@
     btn.disabled = true;
     btn.textContent = 'Generating…';
 
-    // Summarise data for the prompt
-    const nvdSummary = threatData.nvd.slice(0, 5).map(c =>
-      `${c.id} (Score: ${c.score}): ${c.description?.slice(0, 120)}`).join('\n');
-    const cisaSummary = threatData.cisa.slice(0, 5).map(c =>
-      `${c.id} - ${c.vendor} ${c.product}: ${c.name}`).join('\n');
-    const hibpSummary = threatData.hibp.slice(0, 5).map(b =>
-      `${b.title} (${b.domain}) - ${Number(b.pwnCount).toLocaleString()} accounts, data: ${b.dataClasses?.join(', ')}`).join('\n');
-    const urlSummary = threatData.urlhaus.filter(u => u.status === 'online').slice(0, 5).map(u =>
-      `${u.host}: ${u.threat}`).join('\n');
+    // Build rich summaries from live fetched data
+    const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
-    const prompt = `You are a cybersecurity analyst writing a brief, plain-English threat briefing for a small business owner with no technical background.
+    const nvdSummary = threatData.nvd.length
+      ? threatData.nvd.slice(0, 8).map(c =>
+          `- ${c.id} (CVSS ${c.score ?? 'N/A'}): ${c.description?.slice(0, 180) ?? 'No description'}`
+        ).join('\n')
+      : 'No critical CVEs retrieved.';
 
-Based on the following live threat intelligence data from today, write a clear, actionable report in 3 sections:
+    const cisaSummary = threatData.cisa.length
+      ? threatData.cisa.slice(0, 8).map(c =>
+          `- ${c.id} | ${c.vendor} ${c.product} | "${c.name}" | Added: ${c.dateAdded} | Action: ${c.action?.slice(0, 120)}`
+        ).join('\n')
+      : 'No CISA KEV data retrieved.';
 
-1. **What's happening right now** (2-3 sentences summarising the current threat landscape)
-2. **What this means for your business** (3-4 bullet points of specific, practical risks for small businesses)
-3. **What to do today** (3-4 concrete, simple actions the business owner should take immediately)
+    const hibpSummary = threatData.hibp.length
+      ? threatData.hibp.slice(0, 8).map(b =>
+          `- ${b.title} (${b.domain}): ${Number(b.pwnCount).toLocaleString()} accounts exposed on ${b.breachDate}. Data types: ${b.dataClasses?.join(', ')}`
+        ).join('\n')
+      : 'No breach data retrieved.';
 
-Keep it under 300 words. Be specific, not generic. Use plain English.
+    const urlSummary = threatData.urlhaus.filter(u => u.status === 'online').length
+      ? threatData.urlhaus.filter(u => u.status === 'online').slice(0, 8).map(u =>
+          `- ${u.host} | Threat: ${u.threat} | Tags: ${u.tags?.join(', ') || 'none'}`
+        ).join('\n')
+      : 'No active malware URLs retrieved.';
 
-LIVE DATA:
+    const prompt = `Today's date: ${today}
 
-Critical CVEs (last 7 days):
-${nvdSummary || 'No data available'}
+You are a cybersecurity analyst. Below is LIVE threat intelligence data fetched right now from four authoritative sources: NVD (NIST), CISA, Have I Been Pwned, and URLhaus.
 
-Actively exploited vulnerabilities (CISA):
-${cisaSummary || 'No data available'}
+CRITICAL RULES:
+- You MUST only reference CVEs, breaches, vendors, and threats that appear EXACTLY in the data below.
+- Do NOT invent, hallucinate, or reference any CVE IDs, product names, company names, or version numbers not present in this data.
+- Do NOT use any prior knowledge about threats. Only use what is in the LIVE DATA section.
+- If a section says "No data retrieved", state that source is unavailable — do not substitute other information.
+- Every specific claim you make must trace directly back to a line in the data below.
 
-Recent data breaches (HIBP):
-${hibpSummary || 'No data available'}
+Write a plain-English threat briefing for a small business owner in exactly 3 sections:
 
-Active malware URLs (URLhaus):
-${urlSummary || 'No data available'}`;
+### What is happening right now
+2-3 sentences describing the actual threats in today's data. Name specific CVE IDs and breached companies from the data.
+
+### What this means for your business
+3-4 bullet points of specific risks to small businesses based only on the vendors/products/breaches listed below.
+
+### What to do today
+3-4 concrete actions directly addressing the specific vulnerabilities and breaches in today's data.
+
+---
+LIVE DATA (fetched ${today}):
+
+CRITICAL CVEs — Last 7 Days (source: NIST NVD):
+${nvdSummary}
+
+ACTIVELY EXPLOITED VULNERABILITIES (source: CISA Known Exploited Vulnerabilities):
+${cisaSummary}
+
+RECENT DATA BREACHES (source: Have I Been Pwned):
+${hibpSummary}
+
+LIVE BOTNET C2 SERVERS — Currently Active (source: Feodo Tracker / abuse.ch):
+${urlSummary}
+---
+
+Remember: only reference what is in the data above. No invented details.`;
+
 
     out.innerHTML = '<div class="report-body"><span class="cursor">▌</span></div>';
     const reportBody = out.querySelector('.report-body');
