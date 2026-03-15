@@ -1,5 +1,8 @@
 exports.handler = async function (event) {
-  const method = event.httpMethod;
+  if (event.httpMethod !== "GET") {
+    return { statusCode: 405, body: "Method Not Allowed" };
+  }
+
   const source = event.queryStringParameters?.source;
 
   const headers = {
@@ -7,20 +10,17 @@ exports.handler = async function (event) {
     "Access-Control-Allow-Origin": "*",
   };
 
-  if (method !== "GET" && method !== "POST") {
-    return { statusCode: 405, body: "Method Not Allowed" };
-  }
-
   try {
     switch (source) {
-
-      // NVD: Critical CVEs last 7 days
+      // ── NVD: Latest critical CVEs (NIST, free, no key) ──
       case "nvd": {
         const now = new Date();
-        const past = new Date(now - 7 * 24 * 60 * 60 * 1000);
+        const past = new Date(now - 7 * 24 * 60 * 60 * 1000); // last 7 days
         const fmt = (d) => d.toISOString().split(".")[0] + "%2B01:00";
         const url = `https://services.nvd.nist.gov/rest/json/cves/2.0?pubStartDate=${fmt(past)}&pubEndDate=${fmt(now)}&cvssV3Severity=CRITICAL&resultsPerPage=15`;
-        const res = await fetch(url, { headers: { "User-Agent": "VertexThreatDashboard/1.0" } });
+        const res = await fetch(url, {
+          headers: { "User-Agent": "VertexThreatDashboard/1.0" },
+        });
         if (!res.ok) throw new Error(`NVD API error: ${res.status}`);
         const data = await res.json();
         const cves = (data.vulnerabilities || []).map((v) => {
@@ -38,11 +38,14 @@ exports.handler = async function (event) {
         return { statusCode: 200, headers, body: JSON.stringify({ source: "nvd", data: cves }) };
       }
 
-      // CISA KEV: Actively exploited vulnerabilities
+      // ── CISA KEV: Actively exploited vulnerabilities (free, no key) ──
       case "cisa": {
-        const res = await fetch("https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json");
+        const res = await fetch(
+          "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+        );
         if (!res.ok) throw new Error(`CISA API error: ${res.status}`);
         const data = await res.json();
+        // Most recently added
         const recent = (data.vulnerabilities || [])
           .sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded))
           .slice(0, 15)
@@ -59,28 +62,33 @@ exports.handler = async function (event) {
         return { statusCode: 200, headers, body: JSON.stringify({ source: "cisa", data: recent }) };
       }
 
-      // Feodo Tracker: Live botnet C2 IPs
+      // ── URLhaus: Live malware URL feed (abuse.ch, free) ──
       case "urlhaus": {
-        const res = await fetch("https://feodotracker.abuse.ch/downloads/ipblocklist.json", {
-          headers: { "User-Agent": "VertexThreatDashboard/1.0" },
+        const res = await fetch("https://urlhaus-api.abuse.ch/v1/urls/recent/limit/20/", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: "",
         });
-        if (!res.ok) throw new Error(`Feodo Tracker error: ${res.status}`);
+        if (!res.ok) throw new Error(`URLhaus error: ${res.status}`);
         const data = await res.json();
-        const entries = (data.blocklist || []).slice(0, 20).map((e) => ({
-          id: e.ip_address,
-          host: e.ip_address,
-          status: e.status === "online" ? "online" : "offline",
-          threat: `${e.malware} botnet C2`,
-          tags: [e.malware, e.country].filter(Boolean),
-          dateAdded: e.first_seen,
+        const urls = (data.urls || []).slice(0, 15).map((u) => ({
+          id: u.id,
+          url: u.url,
+          host: u.host,
+          status: u.url_status,
+          threat: u.threat,
+          tags: u.tags || [],
+          dateAdded: u.date_added,
         }));
-        return { statusCode: 200, headers, body: JSON.stringify({ source: "urlhaus", data: entries }) };
+        return { statusCode: 200, headers, body: JSON.stringify({ source: "urlhaus", data: urls }) };
       }
 
-      // HIBP: Recent public breaches
+      // ── HIBP: Recent public breaches (no key needed for breach list) ──
       case "hibp": {
         const res = await fetch("https://haveibeenpwned.com/api/v3/breaches", {
-          headers: { "User-Agent": "VertexThreatDashboard/1.0" },
+          headers: {
+            "User-Agent": "VertexThreatDashboard/1.0",
+          },
         });
         if (!res.ok) throw new Error(`HIBP error: ${res.status}`);
         const data = await res.json();
@@ -100,119 +108,8 @@ exports.handler = async function (event) {
         return { statusCode: 200, headers, body: JSON.stringify({ source: "hibp", data: recent }) };
       }
 
-      // Ransomware.live: Recent ransomware victims (free, no key)
-      case "ransomware": {
-        const res = await fetch("https://api.ransomware.live/v2/recentvictims", {
-          headers: {
-            "User-Agent": "VertexThreatDashboard/1.0",
-            "Accept": "application/json",
-          },
-        });
-        if (!res.ok) throw new Error(`Ransomware.live error: ${res.status}`);
-        const data = await res.json();
-        const victims = (Array.isArray(data) ? data : data.victims || [])
-          .slice(0, 20)
-          .map((v) => ({
-            victim: v.victim || v.company || "Unknown",
-            group: v.group || v.gang || "Unknown",
-            country: v.country || "—",
-            sector: v.activity || v.sector || "Unknown",
-            published: v.published || v.date || null,
-            website: v.website || null,
-            description: (v.description || "").slice(0, 200),
-          }));
-        return { statusCode: 200, headers, body: JSON.stringify({ source: "ransomware", data: victims }) };
-      }
-
-      // OpenPhish: Live phishing URLs (free community feed, GitHub, no key)
-      case "phishing": {
-        const res = await fetch(
-          "https://raw.githubusercontent.com/openphish/public_feed/refs/heads/main/feed.txt",
-          { headers: { "User-Agent": "VertexThreatDashboard/1.0" } }
-        );
-        if (!res.ok) throw new Error(`OpenPhish error: ${res.status}`);
-        const text = await res.text();
-        const urls = text
-          .split("\n")
-          .map((u) => u.trim())
-          .filter(Boolean)
-          .slice(0, 30)
-          .map((url) => {
-            let host = url;
-            try { host = new URL(url).hostname; } catch {}
-            return { url, host, status: "active", threat: "phishing", dateAdded: new Date().toISOString() };
-          });
-        return { statusCode: 200, headers, body: JSON.stringify({ source: "phishing", data: urls }) };
-      }
-
-      // Domain/IP/keyword lookup across all sources
-      case "lookup": {
-        if (method !== "POST") return { statusCode: 405, body: JSON.stringify({ error: "POST required" }) };
-        let body;
-        try { body = JSON.parse(event.body); } catch { return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON" }) }; }
-        const query = (body.query || "").trim().toLowerCase();
-        if (!query) return { statusCode: 400, body: JSON.stringify({ error: "query required" }) };
-
-        const results = [];
-
-        // Check CISA KEV
-        try {
-          const r = await fetch("https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json");
-          if (r.ok) {
-            const d = await r.json();
-            const hits = (d.vulnerabilities || []).filter(v =>
-              v.vendorProject?.toLowerCase().includes(query) ||
-              v.product?.toLowerCase().includes(query) ||
-              v.cveID?.toLowerCase().includes(query)
-            ).slice(0, 5);
-            if (hits.length) results.push({ source: "CISA KEV", severity: "critical",
-              matches: hits.map(m => ({ label: `${m.cveID} — ${m.vendorProject} ${m.product}`, detail: m.shortDescription, date: m.dateAdded })) });
-          }
-        } catch {}
-
-        // Check Feodo Tracker IPs
-        try {
-          const r = await fetch("https://feodotracker.abuse.ch/downloads/ipblocklist.json", { headers: { "User-Agent": "VertexThreatDashboard/1.0" } });
-          if (r.ok) {
-            const d = await r.json();
-            const hits = (d.blocklist || []).filter(e => e.ip_address?.includes(query)).slice(0, 5);
-            if (hits.length) results.push({ source: "Feodo Tracker (Botnet C2)", severity: "critical",
-              matches: hits.map(m => ({ label: `${m.ip_address} — ${m.malware} C2`, detail: `Country: ${m.country || "Unknown"} | Status: ${m.status}`, date: m.first_seen })) });
-          }
-        } catch {}
-
-        // Check Ransomware.live victims
-        try {
-          const r = await fetch("https://api.ransomware.live/v2/recentvictims", { headers: { "User-Agent": "VertexThreatDashboard/1.0", "Accept": "application/json" } });
-          if (r.ok) {
-            const d = await r.json();
-            const list = Array.isArray(d) ? d : d.victims || [];
-            const hits = list.filter(v =>
-              v.victim?.toLowerCase().includes(query) ||
-              v.website?.toLowerCase().includes(query) ||
-              v.company?.toLowerCase().includes(query)
-            ).slice(0, 5);
-            if (hits.length) results.push({ source: "Ransomware.live", severity: "high",
-              matches: hits.map(m => ({ label: `${m.victim || m.company} — attacked by ${m.group || m.gang}`, detail: `Sector: ${m.activity || "Unknown"} | Country: ${m.country || "Unknown"}`, date: m.published || m.date })) });
-          }
-        } catch {}
-
-        // Check OpenPhish URLs
-        try {
-          const r = await fetch("https://raw.githubusercontent.com/openphish/public_feed/refs/heads/main/feed.txt", { headers: { "User-Agent": "VertexThreatDashboard/1.0" } });
-          if (r.ok) {
-            const text = await r.text();
-            const hits = text.split("\n").map(u => u.trim()).filter(Boolean).filter(u => u.toLowerCase().includes(query)).slice(0, 5);
-            if (hits.length) results.push({ source: "OpenPhish (Active Phishing)", severity: "high",
-              matches: hits.map(url => ({ label: url, detail: "Active phishing URL — do not visit", date: new Date().toISOString() })) });
-          }
-        } catch {}
-
-        return { statusCode: 200, headers, body: JSON.stringify({ source: "lookup", query, found: results.length > 0, results }) };
-      }
-
       default:
-        return { statusCode: 400, body: JSON.stringify({ error: "Unknown source." }) };
+        return { statusCode: 400, body: JSON.stringify({ error: "Unknown source. Use: nvd, cisa, urlhaus, hibp" }) };
     }
   } catch (err) {
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
