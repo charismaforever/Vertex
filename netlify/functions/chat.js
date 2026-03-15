@@ -18,10 +18,21 @@ exports.handler = async function (event) {
     return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON body." }) };
   }
 
-  const { messages, system } = body;
+  const { messages, system, model } = body;
   if (!messages || !Array.isArray(messages)) {
     return { statusCode: 400, body: JSON.stringify({ error: "messages array required." }) };
   }
+
+  const ALLOWED_MODELS = [
+    'llama-3.3-70b-versatile',
+    'deepseek-r1-distill-llama-70b',
+    'qwen-qwq-32b',
+    'mixtral-8x7b-32768',
+    'llama-3.1-8b-instant',
+    'gemma2-9b-it',
+  ];
+
+  const selectedModel = ALLOWED_MODELS.includes(model) ? model : 'llama-3.3-70b-versatile';
 
   try {
     const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -31,7 +42,7 @@ exports.handler = async function (event) {
         Authorization: `Bearer ${GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
+        model: selectedModel,
         max_tokens: 2048,
         messages: [
           {
