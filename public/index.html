@@ -81,15 +81,37 @@
     display: flex; align-items: center; gap: 16px;
   }
 
-  .pill {
+  .model-select-wrap {
+    position: relative;
+    display: flex; align-items: center;
+  }
+
+  .model-select-wrap::after {
+    content: '▾';
+    position: absolute; right: 10px;
+    font-size: 10px;
+    color: var(--ink-soft);
+    pointer-events: none;
+  }
+
+  #model-select {
+    appearance: none;
+    background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 3px;
-    padding: 3px 10px;
+    padding: 4px 28px 4px 10px;
+    font-family: var(--mono);
     font-size: 10px;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--ink-soft);
-    background: var(--surface);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  #model-select:hover {
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   .clear-btn {
@@ -395,7 +417,17 @@
   <header>
     <div class="wordmark">Vert<em>ex</em></div>
     <div class="header-meta">
-      <span class="pill">Llama 3.3 · 70B</span>
+      <a href="threat.html" style="font-family:var(--mono);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-faint);text-decoration:none;border:1px solid var(--border);border-radius:3px;padding:4px 10px;transition:all 0.15s;" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--ink-faint)';this.style.borderColor='var(--border)'">⚡ Threats</a>
+      <div class="model-select-wrap">
+        <select id="model-select" onchange="switchModel(this)">
+          <option value="llama-3.3-70b-versatile">Llama 3.3 · 70B</option>
+          <option value="deepseek-r1-distill-llama-70b">DeepSeek R1 · 70B</option>
+          <option value="qwen-qwq-32b">Qwen QwQ · 32B</option>
+          <option value="mixtral-8x7b-32768">Mixtral · 8x7B</option>
+          <option value="llama-3.1-8b-instant">Llama 3.1 · 8B (Fast)</option>
+          <option value="gemma2-9b-it">Gemma 2 · 9B</option>
+        </select>
+      </div>
       <button class="clear-btn" onclick="clearChat()">Clear chat</button>
     </div>
   </header>
@@ -450,6 +482,13 @@
 <script>
   let history = [];
   let busy = false;
+  let selectedModel = 'llama-3.3-70b-versatile';
+
+  function switchModel(select) {
+    selectedModel = select.value;
+    clearChat();
+    toast('Switched to ' + select.options[select.selectedIndex].text);
+  }
 
   // ── Textarea auto-resize ──
   function autoResize(el) {
@@ -599,7 +638,7 @@
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history })
+        body: JSON.stringify({ messages: history, model: selectedModel })
       });
 
       removeTyping();
